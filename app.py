@@ -16,7 +16,7 @@ def home():
 
 @app.route("/predict", method="POST")
 def prediction():
-    data = 
+    pass
 
 
 if __name__ == "__main__":
