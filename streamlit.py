@@ -1,17 +1,27 @@
-import  streamlit as st
+import streamlit as st
 import numpy as np
 import joblib
 
-#loading my model
+# Page configuration
+st.set_page_config(
+    page_title="Breast Cancer Early Detection",
+    page_icon="🩺",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# Load pipeline model
 model = joblib.load("break_model.pkl")
 
-#Putting in the title
-st.title("ML Breast Cancer Early Detection and Support Decsion")
+# Title
+st.title("ML Breast Cancer Early Detection and Support Decision")
 
-col1, col2, col3, col4 = st.columns(4)
+st.markdown("Adjust the sliders below to input patient data and click **Predict** to see the result.")
+
+# Create 4 columns with proportional widths
+col1, col2, col3, col4 = st.columns([1.2, 1, 1, 1])
 
 with col1:
-    #input by slider
     mean_radius = st.slider("Mean Radius", 6.981, 28.110, 14.127, 0.01)
     mean_texture = st.slider("Mean Texture", 9.710, 39.280, 19.290, 0.01)
     mean_smoothness = st.slider("Mean Smoothness", 0.05263, 0.1634, 0.09636, 0.001)
@@ -32,22 +42,23 @@ with col4:
     symmetry_error = st.slider("Symmetry Error", 0.007882, 0.07895, 0.020542, 0.001)
     worst_symmetry = st.slider("Worst Symmetry", 0.1565, 0.6638, 0.290076, 0.001)
 
+# Combine features in correct order
+features = np.array([
+    mean_radius, mean_texture, mean_smoothness, mean_compactness,
+    mean_symmetry, mean_fractal_dimension, radius_error,
+    texture_error, smoothness_error, compactness_error,
+    concave_points_error, symmetry_error, worst_symmetry
+]).reshape(1, -1)
 
+# Messages
+positive = "At 95% accuracy, the data suggests possible development of malignant disease. Please see a doctor."
+negative = "At 95% accuracy, the data suggests no malignant development. However, consider further testing."
 
-featuers = [mean_radius, mean_texture, mean_smoothness, mean_compactness,
-       mean_symmetry, mean_fractal_dimension, radius_error,
-       texture_error, smoothness_error, compactness_error,
-       concave_points_error, symmetry_error, worst_symmetry]
+# Predict
+if st.button("Predict"):
+    predicted = model.predict(features)[0]
+    proba = model.predict_proba(features)[0]
 
-
-    
-positive = "At 95% accuracy , the data provided shows that there is development of Malingn disease and we suggest that you start seeing a Doctor"
-negative = "At 95% accuracy , the data provided shows that there is no development of Malingn disease, however we suggest that you may see a doctor for further testing"
-
-
-
-if st.button("predict"):
-      feat =  np.array(featuers).reshape(1, -1)
-      predicted = model.predict(feat)[0]
-      result = positive if predicted == 1 else negative
-      st.success(result)
+    result = positive if predicted == 1 else negative
+    st.success(result)
+    st.info(f"Probability Benign: {proba[0]:.2f}, Malignant: {proba[1]:.2f}")
